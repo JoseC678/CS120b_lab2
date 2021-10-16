@@ -13,22 +13,49 @@
 #endif
 
 int main(void) {
-    /* Insert DDR and PORT initializations */
-	DDRA = 0x00; PORTA = 0xFF;
-	DDRB = 0xFF; PORTB = 0x00;
-	unsigned char led = 0x00;
-	unsigned char button = 0x00;
-    /* Insert your solution below */
-    while (1) {
-	    button = ~PINA & 0x01;
+	//Set the proper inputs and outputs
+    DDRA = 0x00; PORTA = 0xFF; //Configure port A's pins as inputs
+    //DDRB = 0x00; PORTB = 0xFF; //Configure port A's pins as inputs
+    DDRC = 0xFF; PORTC = 0x00; //Configure port A's pins as inputs
+    //DDRD = 0xFF; PORTD = 0x00; //Configure port A's pins as outputs 
 
-	    if (button){
-	    	led = (led & 0x0FC) | 0x01;
-	    }else {
-	    	led = (led & 0xFC) | 0x02;
-	    }
-	    PORTB = led;
-	
-    }
-    return 1;
+
+    unsigned char tempA = 0x00;
+    //unsigned char tempB = 0x00;
+    unsigned char fuel_LED = 0x00;
+
+
+
+
+
+    while(1) {
+        tempA= PINA;
+        if(tempA == 0x00){
+            fuel_LED = 0x40;
+        }
+        else if(tempA <=0x02 ){//Check if fuel below or equal to 2
+            fuel_LED = 0x60;
+        }
+        else if(tempA <= 0x04){//Check if fuel below or equal to 4
+            fuel_LED = 0x70;
+        }
+        else if(tempA <= 0x06){//Check if fuel below or equal to 6
+            fuel_LED = 0x38;
+        }
+        else if(tempA <= 0x09){//Check if fuel below or equal to 9
+            fuel_LED = 0x3C;
+        }
+        else if(tempA <= 0x0C){//Check if fuel below or equal to 12
+            fuel_LED = 0x3E;
+        }else{
+			fuel_LED = 0x3F;
+		}
+
+
+        PORTC = fuel_LED;
+    } 
+
+    
+	return 1;
 }
+
