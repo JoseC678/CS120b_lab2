@@ -35,9 +35,9 @@ tests = [ {'description': 'PNA=0x71,  => PORTC: 0x60 = 96',
     },
 
     {'description': 'PNA=0x30,  => PORTC: 0x80 = 128',
-    'steps': [ {'inputs': [('PINA',0xFF)], 'iterations': 1 },
+    'steps': [ {'inputs': [('PINA',0x7C)], 'iterations': 1 },
                  ],
-    'expected': [('PORTC',0x40)],
+    'expected': [('PORTC',0x70)],
     },
 
 

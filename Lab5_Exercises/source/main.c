@@ -25,7 +25,10 @@ int main(void) {
     unsigned char fuel_LED = 0x00;
 
     while(1) {
-        tempA= ~PINA;
+        tempA = ~PINA;
+		tempA = tempA & 0x0F;
+
+		
         if(tempA == 0x00){
             fuel_LED = 0x40;
         }
