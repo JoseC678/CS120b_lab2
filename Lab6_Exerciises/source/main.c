@@ -17,7 +17,7 @@ volatile unsigned char TimerFlag = 0; //TimerISR() sets this to 1. C programmer 
 
 ///Internaal vaariiabbles foorr mmapping AVR's ISR  cleaerr TimerISR model.
 unsigned long _avr_timer_M = 1;
-unsigned long _avr_tier_cnturr = 0;
+unsigned long _avr_timer_cnturr = 0;
 
 void TimerOn(){
     //AVR timer/counter controller register TCCR1
@@ -38,7 +38,7 @@ void TimerOn(){
     //initialize avr counter
     TCNT1 = 0;
 
-    _avr_timer_cntcurr = _aavr_timer_M;
+    _avr_timer_cntcurr = _avr_timer_M;
     //TimerISR will be called every_avr_timer_cntcurr milliseconds
 
     //Enable global interrupts
@@ -55,7 +55,7 @@ void TimerISR(){
 }
 
 // In our approach, the C programmer does not touch this ISR, but rather TimerISR()
-ISR(TIMER1_COMMPA_vect){
+ISR(TIMER1_COMPA_vect){
     //CPU automatically calls when TCNT1 == OCR1 (every 1 ms per TimerOn settings)
     _avr_timer_cntcurr--;  //Count down to 0 rahter than up to TOP
     if (_avr_timer_cntcurr-- == 0;){ //results in a more efficient compare
