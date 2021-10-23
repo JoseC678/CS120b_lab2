@@ -1,7 +1,7 @@
-/*	Author: lab
+/*	Author: Jose Cervantes jcerv077@gmail.com
  *  Partner(s) Name: 
- *	Lab Section:
- *	Assignment: Lab #  Exercise #
+ *	Lab Section: 022
+ *	Assignment: Lab #7  Exercise #1
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
