@@ -263,8 +263,8 @@ int main(void) {
     //Initialize the starting point
     state = start_point;
 
-    TOTAL = 0x07; //initialize to 0x07
-    PORTB = 0x07; //Starting point is 7
+    TOTAL = 0x00; //initialize to 0x07
+    PORTB = 0x00; //Starting point is 7
     
     TimerSet(100);
     TimerOn();
@@ -274,7 +274,7 @@ int main(void) {
     //Initializes the LCD display
     LCD_init();
 
-        LCD_WriteData_once( 0x07 +'0');
+        LCD_WriteData_once( 0x00 +'0');
 
 
 

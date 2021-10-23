@@ -1,13 +1,11 @@
 /*	Author: Jose Cervantes jcerv077@gmail.com
  *  Partner(s) Name: 
  *	Lab Section: 022
- *	Assignment: Lab #6  Exercise #2
+ *	Assignment: Lab #7  Exercise #1
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
- *
- *  Demo Link: 
  */
 #include <avr/io.h>
 #include "io.h"
@@ -17,11 +15,16 @@
 #include "simAVRHeader.h"
 #endif
 
-enum States{start_point, next_LED, PA0_press, PA0_press2} state;
-unsigned char array[] = {0x01, 0x02, 0x04,0x02};
-unsigned char i;
-unsigned char TOTAL;
-unsigned char current_score = 5;
+
+
+
+enum States{start_point,wait, PA0_press, PA1_press,reset_press, reset_wait ,PA0_wait,PA1_wait, increment_one} state;
+unsigned char TOTAL; 
+unsigned char button;
+unsigned char hold;
+
+unsigned char new_value;
+unsigned char current_score;
 
 volatile unsigned char TimerFlag = 0; //TimerISR() sets this to 1. C programmer should clear to 0.
 unsigned long _avr_timer_M = 1;
@@ -54,170 +57,233 @@ void TimerSet(unsigned long M){
 }
 
 void tick(){
+    button = 0x00;
+    button = ~PINA;
 
-
-
-
-    unsigned char tempA = 0x00;
-    tempA = PINA;
-    tempA = ~tempA;
-    switch (state){
-        case start_point:
-            state = next_LED;
-            i = 0;
-            PORTB = 0x00;
-            TOTAL = 5;
+	button = button & 0x03;
+    
+    switch(state){
+        case start_point: 
+            state = wait;
+            hold =0x00;
+            current_score = TOTAL;
+            new_value = 0;
             break;
 
-        case next_LED:
-
-            if((tempA & 0x01) == 0x01){
-                state = PA0_press;
+        case wait:
+            if(button == 0x01){
+                state = PA0_press; //Go to the press PA0 state in the next switch and add 1.
+            }
+            else if(button == 0x02){
+                state = PA1_press; //Go to the press PA1 state in the next switch and add 1.
+            }
+            else if(button == 0x03){
+                state = reset_press;//Go to the reset_press state and reset TOTAL to zero
             }else{
-                state = next_LED;
+                state = wait; //if unkown value stay in wait until valid value is entered.
             }
             break;
-
 
         case PA0_press:
-            if((tempA & 0x01) ==0x01){
-                state = PA0_press;
+            if(button == 0x01){
+                
+                state = PA0_wait; //Go to PA0_wait because in order to increment again PINA has  
+                                  //to be a new value
             }else{
-                state = PA0_press2;
+                state = wait;
             }
             break;
-        
-        case PA0_press2:
-            if((tempA & 0x01) ==0x01){
-                if((tempA & 0x01) ==0x01 && current_score == 0x09){
-                    current_score = 0x05;
+                   //     hold++;
+                ///if(hold == 0x0A){
+                   // state = increment_one;
+                 //   hold = 0x00;
+               // }else{
+
+        case PA0_wait:
+            if(button == 0x01){
+                
+                hold++;
+                if(hold >= 0x0A){
+                    state = PA0_press;
+                    hold = 0x00;
+                }else{
+
+                state = PA0_wait; //Continue in this state until a new value is entered.
                 }
-                state = start_point;
             }else{
-                state = PA0_press2;
+                if(button == 0x01){
+                    state = PA0_press; //Go to the press PA0 state in the next switch and add 1.
+                }
+                else if(button == 0x02){
+                    state = PA1_press; //Go to the press PA1 state in the next switch and add 1.
+                }
+                else if(button == 0x03){
+                    state = reset_press;//Go to the reset_press state and reset TOTAL to zero
+                }else{
+                    state = wait; //if unkown value stay in wait until valid value is entered.
+                }
+            }
+            break;
+        
+        case PA1_press:
+            if(button == 0x02){
+                state = PA1_wait; //Go to PA0_wait because in order to increment again PINA has  
+                                  //to be a new value
+            }else{
+                state = wait;
             }
             break;
 
-        
+        case PA1_wait:
+            if(button == 0x02){
+           
+                
+                hold++;
+                if(hold >= 0x0A){
+                    state = PA1_press;
+                    hold = 0x00;
+                }else{
 
-        default:
-            state = start_point;
+                state = PA1_wait; //Continue in this state until a new value is entered.
+                }
+
+            }else{
+                if(button == 0x01){
+                    state = PA0_press; //Go to the press PA0 state in the next switch and add 1.
+                }
+                else if(button == 0x02){
+                    state = PA1_press; //Go to the press PA1 state in the next switch and add 1.
+                }
+                else if(button == 0x03){
+                    state = reset_press;//Go to the reset_press state and reset TOTAL to zero
+                }else{
+                    state = wait; //if unkown value stay in wait until valid value is entered.
+                }
+            }
             break;
-    }
+
+        case reset_press:
+            if(button == 0x03){
+                state = reset_wait;
+            }else{
+                state = wait;
+            }
+            break;
+        
+        case reset_wait:
+            if(button == 0x03){
+                state = reset_wait;
+            }else{
+                if(button == 0x01){
+                    state = PA0_press; //Go to the press PA0 state in the next switch and add 1.
+                }
+                else if(button == 0x02){
+                    state = PA1_press; //Go to the press PA1 state in the next switch and add 1.
+                }
+                else if(button == 0x03){
+                    state = reset_press;//Go to the reset_press state and reset TOTAL to zero
+                }else{
+                    state = wait; //if unkown value stay in wait until valid value is entered.
+                }
+            }
+
+        
+        default:
+            //error
+            //PORTC=0xFF;
+            break; 
+
+
+    } 
+
 
     switch(state){
-        case start_point:
-            break;
-        case next_LED:
-            if(i == 3){
-                PORTB = array[i];
 
-                i = 0x00;
-            }
-            else{
-                PORTB = array[i];
-                i++;
-            }
-            break;
-        case PA0_press:
-
-                state = PA0_press;
-                PORTB = array[i];
-            if(array[i] == 0x02){
-                current_score++;
-            }
-            else{
-                current_score--;
-            }
-
-                break;
-
-        case PA0_press2:
             
 
-                break;
+        case PA0_press:
+            if(TOTAL == 0x09){
+                //Do nothing
+              //  state = wait;
+            //    button = 0x00;
+            }
+            else{
+                TOTAL++;
+              //  state = wait;
+                //button = 0x00;
+            }
+        break;
 
-         default:
+        
+
+        case PA1_press:
+            if(TOTAL == 0x00){
+                //Do nothing
+             //   state = wait;
+               // button = 0x00;
+            }
+            else{
+                TOTAL--;
+             //   state = wait;
+               // button = 0x00;
+            }
             break;
-
+        
+        case reset_press:
+            TOTAL = 0x00;
+           // state = wait;
+            break;
+        
+        default:
+            //error
+            //PORTC=0xFF;
+            break;
     }
 
-
-
-    if(current_score == 0x00){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
+    if(current_score == TOTAL){
+        //do nothing
     }
-    else if(current_score == 0x01){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x02){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x03){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x04){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x05){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x06){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x07){
-        LCD_DisplayString(1, "");
-        LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x08){
-        LCD_DisplayString(1, "");
-       LCD_WriteData_once( current_score +'0');
-
-    }
-    else if(current_score == 0x09){
-        LCD_DisplayString(1, "VICTORY");
+    else{
+        current_score = TOTAL;
+        LCD_WriteData_once( TOTAL +'0');
     }
 
 }
 
 
+
+
 int main(void) {
-    /* Insert DDR and PORT initializations */
-    DDRA = 0x00; PORTA = 0xFF;
-    DDRB = 0xFF; PORTB = 0x00;
-    DDRC = 0xFF; PORTC = 0x00; //Configure port A's pins as outputs 
+       	//Set the proper inputs and outputs
+    DDRA = 0x00; PORTA = 0xFF; //Configure port A's pins as inputs
+   // DDRB = 0xFF; PORTB = 0x00; //Configure port A's pins as inputs
+    DDRC = 0xFF; PORTC = 0x00; //Configure port C's pins as outputs
+     DDRB = 0xFF; PORTB = 0x00; //Configure port C's pins as outputs
     DDRD = 0xFF; PORTD = 0x00; //Configure port A's pins as outputs 
+    //Initialize the starting point
+    state = start_point;
+
+    TOTAL = 0x00; //initialize to 0x07
+    PORTB = 0x00; //Starting point is 7
     
-    TimerSet(300);
+    TimerSet(100);
     TimerOn();
-    
-        //Initializes the LCD display
+
+
+
+    //Initializes the LCD display
     LCD_init();
 
-        LCD_WriteData_once( 0x05 +'0');
+        LCD_WriteData_once( 0x00 +'0');
+
+
 
     /* Insert your solution below */
     while (1) {
-        tick();
-        while (!TimerFlag);
+                tick();
+        while (!TimerFlag){};
         TimerFlag = 0;
-        //Note: For the above a better style would use a synchSM with TiickSM()
-        //This example just illusstrates the use of  the ISR and flag
-
+//
     }
     return 1;
 }
