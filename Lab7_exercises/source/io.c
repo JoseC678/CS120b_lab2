@@ -50,6 +50,16 @@ void LCD_WriteData(unsigned char Data) {
    delay_ms(1);
 }
 
+void LCD_WriteData_once(unsigned char Data) {
+   LCD_Cursor(1);
+   SET_BIT(CONTROL_BUS,RS);
+   DATA_BUS = Data;
+   SET_BIT(CONTROL_BUS,E);
+   asm("nop");
+   CLR_BIT(CONTROL_BUS,E);
+   delay_ms(1);
+}
+
 void LCD_DisplayString( unsigned char column, const unsigned char* string) {
    LCD_ClearScreen();
    unsigned char c = column;
