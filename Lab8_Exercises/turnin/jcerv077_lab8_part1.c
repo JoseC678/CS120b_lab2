@@ -1,4 +1,4 @@
-/*	Author: lab
+/*	Author: Jose Cervantes
  *  Partner(s) Name: 
  *	Lab Section:
  *	Assignment: Lab #8  Exercise #1

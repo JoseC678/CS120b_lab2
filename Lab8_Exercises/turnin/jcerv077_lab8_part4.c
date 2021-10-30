@@ -1,7 +1,7 @@
 /*	Author: Jose Cervantes
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #8  Exercise #2
+ *	Assignment: Lab #8  Exercise #4
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
@@ -32,16 +32,22 @@ int main(void) {
 
     ADC_init();
      unsigned short x = ADC;
-    unsigned short tempB = x;
-    unsigned short tempD = x;
+
+    unsigned short temp = ((0x2FF)/8);
+    //unsigned short tempD = x;
    
     /* Insert your solution below */
     while (1) {
     x = ADC;
-    tempB = x;
-    tempD = x;
-    PORTB = (char)(tempB & 0xFF); //PORTB = 0xFF
-    PORTD = (char)((tempD >> 8) & 0x03);//PORTD == 0x03 shift over 8 right ;
+
+    if(temp >= x ){PORTB = 0x1;}
+    else if((temp * 2) >= x){PORTB = 0x03;}
+    else if((temp * 3) >= x){PORTB = 0x07;}
+    else if((temp * 4) >= x){PORTB = 0x0F;}
+    else if((temp * 5) >= x){PORTB = 0x1F;}
+    else if((temp * 6) >= x){PORTB = 0x3F;}
+    else if((temp * 7) >= x){PORTB = 0x7F;}
+    else if((temp * 8) >= x){PORTB = 0xFF;}
 
     }
     return 1;
