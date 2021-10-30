@@ -39,7 +39,7 @@ int main(void) {
     while (1) {
     x = ADC;
     tempB = x;
-    if(tempB>=(0xFF)/2){
+    if(tempB>=(0x3FF)/2){
         PORTB = 0x01;
     }
     else{
