@@ -31,14 +31,17 @@ int main(void) {
     DDRD = 0xFF; PORTD = 0x00;
 
     ADC_init();
-
-
-    unsigned short x = 0x00;
+     unsigned short x = ADC;
+    unsigned short tempB = x;
+    unsigned short tempD = x;
+   
     /* Insert your solution below */
     while (1) {
     x = ADC;
-    PORTB = (char)(x & 0xFF); //PORTB = 0xFF
-    PORTD = (char)((x >> 8) & 0x03);//PORTD == 0x03 shift over 8 right ;
+    tempB = x;
+    tempD = x;
+    PORTB = (char)(tempB & 0xFF); //PORTB = 0xFF
+    PORTD = (char)((tempD >> 8) & 0x03);//PORTD == 0x03 shift over 8 right ;
 
     }
     return 1;
