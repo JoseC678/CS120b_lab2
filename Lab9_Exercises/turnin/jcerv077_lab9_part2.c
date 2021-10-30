@@ -1,7 +1,7 @@
 /*	Author: Jose Cervantes jcerv077@gmail.com
  *  Partner(s) Name: 
  *	Lab Section: 022
- *	Assignment: Lab #9  Exercise #3
+ *	Assignment: Lab #9  Exercise #2
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
@@ -22,15 +22,11 @@
 #include "simAVRHeader.h"
 #endif
 
-enum state{init, wait, Play_Melody, check} state;
-unsigned short i;
-unsigned short note_number;
-unsigned short time_number;
-
-
-unsigned short array_time[]  ={49,49,49,49,49,49,49,49,49,59};
-unsigned short array_notes[] = {293.66, 349.23, 349.23,293.66,349.23,349.23,
-                                293.66, 349.23, 300.66,349.23};
+enum State_one{init_1, wait_1,  Buttton_on_off} state1;
+enum State_two{init_2, wait, increase, decrease} state2;
+unsigned char toogle_on_off;
+unsigned char i;
+unsigned short array[] = {261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25};
 
 
 
@@ -92,50 +88,81 @@ void PWM_off() {
 }
 
 void tick(){
-    switch (state){
-        case init:
-            state = wait;
-            i = 0x00;
-            note_number = 0x00;
-            time_number = 0x00;
+    switch(state2){
+        case init_2:
+            state2 = wait;
+            i = 0;
             break;
         case wait:
-            state = ((~PINA & 0x01)==0x01) ? Play_Melody : wait;
-        case Play_Melody:
-            break;
-        case check:
-            state = ((~PINA & 0x01)==0x01) ? check : wait;
-            break;
-        
-    }
-
-    switch(state){
-        case wait:
-            break;
-        case Play_Melody:
-            if(i<=500){
-                set_PWM(array_notes[note_number]);
-
-                if(time_number==array_time[note_number]){
-                    note_number++;
-                    time_number = 0x00;
-                }
-                time_number++;
-                i++;
-
+            if((~PINA & 0x07) == 0x04){ //increase button
+                state2 = increase;
+                if(i==7){}
+                else{i++;}
+            }
+            else if((~PINA & 0x07) == 0x01){
+                state2 = decrease;
+                if(i==0){}
+                else{i--;}
             }
             else{
-                state = check;
-                i=0x00;
-                note_number = 0x00;
-                set_PWM(0);
+                state2 = wait;
             }
+            break;
+    
+        case increase:
+            state2 = ((~PINA & 0x07)==0x04) ? increase: wait;
+            break;
+
+        case decrease:
+            state2 = ((~PINA & 0x07)==0x01) ? decrease: wait;
+
             break;
         default:
             break;
-
     }
-   
+
+
+    switch(state1){
+        case init_1:
+            state1 = wait_1;
+            toogle_on_off = 0;
+            break;
+
+        case wait_1:
+            if(toogle_on_off == 1){set_PWM(array[i]);}
+            else{set_PWM(0);}
+
+            if((~PINA & 0x07) == 0x02){
+                state1 = Buttton_on_off;
+                if(toogle_on_off == 0){
+                    toogle_on_off = 1;
+                    set_PWM(array[i]);
+
+                }else if(toogle_on_off == 1){
+                    toogle_on_off = 0;
+                    set_PWM(0);
+                }
+
+            }else{
+                state1 = wait_1;
+            }
+            break;
+
+        case Buttton_on_off:
+            if((~PINA & 0x07) == 0x02){
+                state1 = Buttton_on_off;
+            }else{
+                state1 = wait_1;
+            }
+            break;
+
+        default:
+            break;
+
+        
+    }
+
+
 }
 
 
@@ -147,10 +174,11 @@ int main(void) {
     DDRC = 0xFF; PORTC = 0x00; //Configure port A's pins as outputs 
     DDRD = 0xFF; PORTD = 0x00; //Configure port A's pins as outputs 
     
-    TimerSet(10);
+    TimerSet(100);
     TimerOn();
     PWM_on();
-    state = init;
+    state1 = init_1;
+    state2 = init_2;
     //Initializes the LCD display
 
 
