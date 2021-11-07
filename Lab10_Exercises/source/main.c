@@ -139,21 +139,37 @@ int main(void) {
     //DDRD = 0xFF; PORTD = 0x00; //Configure port A's pins as outputs 
     
     //Initialize the starting point
+    unsigned short ThreeLEDcount = 0;
+    unsigned short SingleLEDcount = 0;
+    unsigned short Period = 100;
+
     ThreeLEDstate = init;
     CombineState = output;
 
     
-    TimerSet(1000);
+    TimerSet(100);
     TimerOn();
     
     /* Insert your solution below */
     while (1) {
-        threeLEDTick();
-        SingleLedTick();
+        if(ThreeLEDcount>=300){
+            threeLEDTick();
+            ThreeLEDcount = 0;
+        }
+
+        if(SingleLEDcount>=1000){
+            SingleLedTick();
+            SingleLEDcount = 0;
+        }
+
         CombineTick();
 
-        while (!TimerFlag);
+        while (!TimerFlag){};
         TimerFlag = 0;
+
+        ThreeLEDcount += Period;
+        SingleLEDcount += Period;
+
 
 
     }
