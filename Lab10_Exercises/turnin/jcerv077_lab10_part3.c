@@ -30,9 +30,9 @@ unsigned char i = 0;
 
 
 enum BlinkingLEDsm{init_oneLED, ON_OFF} BlinkingLEDstate;
-unsigned char SingleLEDArray[] = {0x01,0x00};
-unsigned char j = 0;
+unsigned char LEDarray[]={0x01,0x00};
 unsigned char BlinkingLED = 0;
+unsigned char j = 0;
 
 
 enum SpeakerSM{init_Speaker, SpeakerOn, SpeakerOff} SpeakerState;
@@ -113,12 +113,7 @@ void SingleLedTick(){
             BlinkingLEDstate = ON_OFF;
             break;
         case ON_OFF:
-            if(j==0){speakerValue = SingleLEDArray[0];}
-            if(j==1){speakerValue = SingleLEDArray[1];}
-            
-            if(i<1){i++;}
-            else{i=0;}
-
+            BlinkingLEDstate = ON_OFF;
             break;
         default:
             break;
@@ -126,7 +121,13 @@ void SingleLedTick(){
 
     switch(BlinkingLEDstate){
         case ON_OFF:
-            BlinkingLED = ~BlinkingLED;
+            if(j==0){BlinkingLED = LEDarray[0];}
+            if(j==1){BlinkingLED = LEDarray[1];}
+
+            
+            if(j<1){j++;}
+            else{j=0;}
+
             break;
 
     }
@@ -139,7 +140,7 @@ void SpeakerTick(){
             speakerValue = 0;
             break;
         case SpeakerOff:
-            if((~PINA & 0x01) == 0x01){
+            if((~PINA & 0x04) == 0x04){
                 SpeakerState = SpeakerOn;
             }
             else{
@@ -147,7 +148,7 @@ void SpeakerTick(){
             }
             break;
         case SpeakerOn:
-            if((~PINA & 0x01) == 0x01){
+            if((~PINA & 0x04) == 0x04){
                 speakerValue = ~speakerValue;
                 SpeakerState = SpeakerOn;
             }
@@ -219,7 +220,7 @@ int main(void) {
         }
 
         if(SingleLEDcount>=1000){
-           // SingleLedTick();
+            SingleLedTick();
             SingleLEDcount = 0;
         }
 
