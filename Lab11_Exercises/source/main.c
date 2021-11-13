@@ -14,13 +14,14 @@
  *
  *  Demo Link: https://www.youtube.com/channel/UCQNx-GgmXaHu-ebYzAjvanA
  */
- */
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #ifdef _SIMULATE_
 #include "simAVRHeader.h"
 #include "../header/keypad.h"
 #include "../header/timer.h"
+#include "../header/io.h"
 #endif
 
 
@@ -77,6 +78,35 @@ int keypadTick(int state){
 
 }
 
+enum LCDscreen{waitLCD, startLCD};
+unsigned char dispString[16]={};
+unsigned char sentence[] = "                 CS120B is Legend... wait for it DARY!";
+unsigned char index=0;;
+int LCDTick(int state){
+    switch(state){
+        case waitLCD: state = start;
+        case startLCD: state = start;
+        default: break;
+    }
+
+    switch(state){
+        case waitLCD: break;
+        case startLCD: 
+                for (int y = 0; y < 15; ++y) {
+                    dispString[y]=sentence[(y + index) % sizeof(sentence)/sizeof(sentence[0])];
+                }
+                index = ((index + 1) % 52);
+                LCD_init();
+                LCD_DisplayString(1, dispString);
+               // LCD_DisplayString(1, "Hello");
+                break;
+        default: break;
+
+    }
+    return state;
+}
+
+
 enum output{wait2, start2};
 int outputTick(int state){
     switch(state){
@@ -99,10 +129,13 @@ int main(void) {
     unsigned short i = 0;
     DDRB = 0xFF; PORTB = 0x00;
     DDRC = 0xF0; PORTC = 0x0F;
+    DDRA = 0xFF; PORTA = 0x00;
+    DDRD = 0xFF; PORTD = 0x00;
+
 
     
-    static task task1, task2;
-    task *tasks[] = {&task1, &task2}; 
+    static task task1, task2, task3;
+    task *tasks[] = {&task1, &task2, &task3}; 
     const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
     task1.state=wait;
@@ -117,8 +150,16 @@ int main(void) {
     task2.elapsedTime = task2.period;
     task2.TickFct = &outputTick;
 
+    i++;
+
+    task3.state=waitLCD;
+    task3.period=50;
+    task3.elapsedTime = task3.period;
+    task3.TickFct = &LCDTick; 
+
+
     
-    TimerSet(100);
+    TimerSet(50);
     TimerOn();
 
 
