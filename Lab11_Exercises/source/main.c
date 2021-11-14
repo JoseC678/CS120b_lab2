@@ -1,7 +1,7 @@
 /*	Author: lab Jose Cervantes
  *  Partner(s) Name: 
  *	Lab Section:
- *	Assignment: Lab #11  Exercise #2
+ *	Assignment: Lab #11  Exercise #3
  *	Exercise Description: [optional - include for your own benefit]
  *
  *	I acknowledge all content contained herein, excluding template or example
@@ -39,6 +39,7 @@ unsigned char value=0;
 
 enum KeypadStates{wait, start};
 int keypadTick(int state){
+    keypadOutput=GetKeypadKey();
     
     switch(state){
         case wait: state = start; break;
@@ -78,28 +79,25 @@ int keypadTick(int state){
 
 }
 
-enum LCDscreen{waitLCD, startLCD};
+enum LCDscreen{waitLCD, startLCD, buttonPress};
 unsigned char dispString[16]={};
 unsigned char sentence[] = "                 CS120B is Legend... wait for it DARY!";
 unsigned char index=0;;
 int LCDTick(int state){
     switch(state){
-        case waitLCD: state = start;
-        case startLCD: state = start;
+        case waitLCD: state = start; break;
+        case startLCD: state = (value == 0x1F) ? startLCD : buttonPress; break; 
+        case buttonPress: state = startLCD; break;
         default: break;
     }
 
     switch(state){
         case waitLCD: break;
-        case startLCD: 
-                for (int y = 0; y < 15; ++y) {
-                    dispString[y]=sentence[(y + index) % sizeof(sentence)/sizeof(sentence[0])];
-                }
-                index = ((index + 1) % 52);
-                LCD_init();
-                LCD_DisplayString(1, dispString);
-               // LCD_DisplayString(1, "Hello");
-                break;
+        case startLCD: break;
+        case buttonPress: 
+            LCD_DisplayString(1, "");
+			LCD_WriteData(keypadOutput);
+            break;
         default: break;
 
     }
@@ -117,7 +115,7 @@ int outputTick(int state){
 
     switch(state){
         case wait2: break;
-        case start2: PORTB = value; break;
+        case start2:// PORTB = value; break;
         default: break;
     }
     return state;
@@ -139,32 +137,36 @@ int main(void) {
     const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
     task1.state=wait;
-    task1.period=100;
+    task1.period=40;
     task1.elapsedTime = task1.period;
     task1.TickFct = &keypadTick;
 
     i++;
 
     task2.state=wait2;
-    task2.period=100;
+    task2.period=40;
     task2.elapsedTime = task2.period;
     task2.TickFct = &outputTick;
 
     i++;
 
     task3.state=waitLCD;
-    task3.period=50;
+    task3.period=40;
     task3.elapsedTime = task3.period;
     task3.TickFct = &LCDTick; 
 
 
     
-    TimerSet(50);
+    TimerSet(20);
     TimerOn();
+    
+    LCD_init();
+    LCD_DisplayString(1, "");
+	//LCD_DisplayString("Congratulations!");
 
 
     while (1) {
-        keypadOutput=GetKeypadKey();
+        
 
 
         for (i = 0; i < numTasks; ++i) {

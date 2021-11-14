@@ -39,6 +39,7 @@ unsigned char value=0;
 
 enum KeypadStates{wait, start};
 int keypadTick(int state){
+    keypadOutput=GetKeypadKey();
     
     switch(state){
         case wait: state = start; break;
@@ -164,9 +165,6 @@ int main(void) {
 
 
     while (1) {
-        keypadOutput=GetKeypadKey();
-
-
         for (i = 0; i < numTasks; ++i) {
             if (tasks[i]->elapsedTime >= tasks[i]->period) {
                 tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
