@@ -96,7 +96,7 @@ int LCDTick(int state){
         case startLCD: break;
         case buttonPress: 
             LCD_DisplayString(1, "");
-			LCD_WriteData(keypadOutput);
+            LCD_WriteData(keypadOutput);
             break;
         default: break;
 
