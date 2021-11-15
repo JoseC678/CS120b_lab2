@@ -82,7 +82,7 @@ int keypadTick(int state){
 enum LCDscreen{waitLCD, startLCD};
 unsigned char dispString[16]={};
 unsigned char sentence[] = "                 CS120B is Legend... wait for it DARY!";
-unsigned char index=0;;
+unsigned char index=0;
 int LCDTick(int state){
     switch(state){
         case waitLCD: state = start;
@@ -93,10 +93,10 @@ int LCDTick(int state){
     switch(state){
         case waitLCD: break;
         case startLCD: 
-                for (int y = 0; y < 15; ++y) {
+                for (int y = 0; y < 15; y++) {
                     dispString[y]=sentence[(y + index) % sizeof(sentence)/sizeof(sentence[0])];
                 }
-                index = ((index + 1) % 52);
+                index = ((index + 1) % sizeof(sentence)/sizeof(sentence[0]));
                 LCD_init();
                 LCD_DisplayString(1, dispString);
                // LCD_DisplayString(1, "Hello");

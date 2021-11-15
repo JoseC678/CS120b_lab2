@@ -174,7 +174,7 @@ int main(void) {
                 tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
                 tasks[i]->elapsedTime = 0;
             }
-        tasks[i]->elapsedTime += 50;
+        tasks[i]->elapsedTime += 20;
             while(!TimerFlag){}
             TimerFlag = 0;
 

@@ -96,7 +96,7 @@ int LCDTick(int state){
         case startLCD: break;
         case buttonPress: 
             LCD_Cursor(index);
-			LCD_WriteData(keypadOutput);
+            LCD_WriteData(keypadOutput);
 
             if(index>15){index = 1;}
             else{index++;}
@@ -165,14 +165,14 @@ int main(void) {
     
     LCD_init();
     LCD_DisplayString(1, "");
-	LCD_DisplayString(1,"Congratulations!");
+    LCD_DisplayString(1,"Congratulations!");
 
 
     while (1) {
         
 
 
-        for (i = 0; i < numTasks; ++i) {
+        for (i = 0; i < numTasks; i++) {
             if (tasks[i]->elapsedTime >= tasks[i]->period) {
                 tasks[i]->state = tasks[i]->TickFct(tasks[i]->state);
                 tasks[i]->elapsedTime = 0;
