@@ -86,7 +86,7 @@ int main(void){
         PORTC |= 0x02; //set SRCLK to 1
     }
 
-    PORTC |= 0x04; //Set SRCLK to 1
+    PORTC |= 0x04; //Set RCLK to 1
     
     while(1)
     {       
