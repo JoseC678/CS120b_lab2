@@ -1,7 +1,7 @@
 #ifndef JoyStick_H
 #define JoyStick_H
 
-#endif //JoyStick_H
+
 
 
 
@@ -12,6 +12,8 @@ int arrMatrix[4][4] = {{0b10000111,0b10001011,0b10001101,0b10001110},
                        {0b01000111,0b01001011,0b01001101,0b01001110},
                        {0b00100111,0b00101011,0b00101101,0b00101110},
                        {0b00010111,0b00011011,0b00011101,0b00011110}};
+
+
 
 
 //Corresponding binnary sequence for each position in the 2 dimensional array
@@ -42,8 +44,8 @@ unsigned short output=0;
 unsigned short currPosition = 0b10010110; 
 
 
-unsigned short XY_Position(unsigned short x,unsigned short y);
 
+unsigned short XY_Position(unsigned short x,unsigned short y);
 
 
 
@@ -159,3 +161,7 @@ unsigned short XY_Position(unsigned short x,unsigned short y){
     }
     
 } 
+
+
+
+#endif //JoyStick_H
