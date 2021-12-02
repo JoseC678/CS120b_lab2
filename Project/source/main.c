@@ -354,6 +354,7 @@ int GameTick(int state){
             display_menuOnce =1;
             if((~PIND & 0X08)==0X08){
                 set_startingMenu();
+                state = gameInit;
             }
             break;
         case lose_game: 
