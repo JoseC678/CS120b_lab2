@@ -16,7 +16,7 @@
  *
  */
 
-
+#define F_CPU 8000000UL
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
@@ -42,19 +42,22 @@ typedef struct _task{
 }task;
 
 unsigned char currPositionMenu = 0;
-unsigned char gameOn = 0;
+unsigned char gameOn = 0; //used to notify the game state that the "start game" option was selected
 unsigned char outputMenu = 0;
-unsigned char menu_on_off = 1;
+unsigned char menu_on_off = 1; //Used for the Nokia state to know when the menu is on or off
 unsigned char display_menuOnce =0;
- int level = 1;
-void set_startingMenu();
+ int level = 1; //Starting level counter to keep track of the levels
+void set_startingMenu(); 
 void set_PlayGame();
 void restArray();
 void win_Screen();
 void lose_Screen();
 void set_ShowScore(int lvl);
+void printLED(unsigned short valueToLED);
+void lightShowFunc();
 
 
+unsigned char tickLight=0;
 
 
 enum JoyStickState{JoyStick_Init, JoyStick_Wait, Joystick_Update, pause_Hold,pause_Release};   
@@ -73,24 +76,18 @@ int JoyStickTick(int state){
                     //If The current position is the same as the output than no movenment is detected
                     state = JoyStick_Wait;
                 }else{
-                    state = Joystick_Update;
+                    state = Joystick_Update; //update the position
                 }
                 if((~PIND & 0x08)==0x08){
                     state = pause_Hold;
                 }
             }else{
-               // PORTC = 0x00;
-               // for(int l = 0; l < 8; l++){
-              //      PORTC = 0x08;
-              //      PORTC |= ((0b00001111>>l) & 0x01);
-              //      PORTC |= 0x02;
-              //  } 
-              //  PORTC |= 0x04;
+                //printLED(0b00001111);
             }
             break;
         case Joystick_Update: break;
         case pause_Hold:
-            state = ((~PIND & 0x08) == 0x08) ? pause_Hold:pause_Release;
+            state = ((~PIND & 0x08) == 0x08) ? pause_Hold:pause_Release; //wait until release
             break;
         case pause_Release:break;
 
@@ -102,35 +99,17 @@ int JoyStickTick(int state){
         case JoyStick_Init:break;
         case JoyStick_Wait:break;
         case Joystick_Update: 
-            PORTC = 0x00;
-            for(int l = 0; l < 8; l++){
-                PORTC = 0x08;
-                PORTC |= ((output>>l) & 0x01);
-                PORTC |= 0x02;
-            } 
-            PORTC |= 0x04;
+            printLED(output);
+
             currPosition= output;//Update current position
             state = JoyStick_Wait;
             break;
         case pause_Hold:break;
-        case pause_Release:
-                    Snd_Nokia_Instructions(0x40);
-            Snd_Nokia_Instructions(0x80);
-                
-            //Send Text, second Parameter is if to highlight the row
-            Snd_Nokia_Data("1. Start Game ",0);
-            Snd_Nokia_Data("2. Light Show ",1);
-
-
-            state = JoyStick_Wait;
-            menu_on_off =1;
-            PORTC = 0x00;
-            for(int l = 0; l < 8; l++){
-                PORTC = 0x08;
-                PORTC |= ((0b00001111>>l) & 0x01);
-                PORTC |= 0x02;
-            } 
-            PORTC |= 0x04;
+        case pause_Release: //The reset button was pressed so return to the starting menu
+            set_startingMenu();  //Print menu
+            state = JoyStick_Wait; 
+            menu_on_off =1; //Turn menu on
+            printLED(0b00001111);
             break;
         default: break;
     }
@@ -138,15 +117,37 @@ int JoyStickTick(int state){
 
     return state;
 
-
-   // return state;
 }
 
-enum NokiaState{NokiaInit, Nokia_Wait, up_Hold, up_Release, down_Hold,down_Release, start_Hold, start_Release};
+//Array containing the light show sequence
+unsigned char ArrLightShow[]={0b10000000,0b01000000,0b00100000,0b00010000,//all Top to botom
+                              0b11110111,0b11111011,0b11111101,0b11111110,//all Left to right
+
+                              0b10000111,0b10001011,0b10001101,0b10001110,//one by one left to right
+                              0b01001110,0b01001101,0b01001011,0b01000111,//one by one left to right
+                              0b00100111,0b00101011,0b00101101,0b00101110,//one by one left to right
+                              0b00011110,0b00011101,0b00011011,0b00010111,//one by one left to right
+                                         0b00100111,0b01000111,0b10000111,//one by one up down
+                              0b10001011,0b01001011,0b00101011,0b00011011,//one by one up down
+                              0b00011101,0b00101101,0b01001101,0b10001101,//one by one up down
+                              0b10001110,0b01001110,0b00101110,0b00011110,//one by one up down
+                              0b11110000,0b11110000,0b11110000,0b11110000,
+                              0b11110000,0b11110000,0b11110000,0b11110000};//all on
+
+                          //    0b00011110,0b00101110,0b01001110,0b10001110,//one by one up down
+                        ///      0b10001101,0b01001101,0b00101101,0b00011101,//one by one up down
+                         //     0b00011011,0b00101011,0b01001011,0b10001011,//one by one up down
+                          //    0b10000111,0b01000111,0b00100111,0b00010111};//one by one up down
+
+unsigned char indexLight=0;
+
+unsigned char option1 =1;
+unsigned char option2 =0;
+enum NokiaState{NokiaInit, Nokia_Wait, up_Hold, up_Release, down_Hold,down_Release, start_Hold, start_Release, LightShow};
 int NokiaTick(int state){
-            if((~PIND & 0X08)==0X08){
-                set_startingMenu();
-            }
+    if((~PIND & 0X08)==0X08){
+        set_startingMenu(); //Print menu if button is pressed
+    }
 
     switch(state){
         case NokiaInit: 
@@ -156,12 +157,14 @@ int NokiaTick(int state){
             break;
         case Nokia_Wait:
             if(menu_on_off == 1){
-                if((~PIND & 0x01) == 0x01){
+                if((~PIND & 0x01) == 0x01){ //Scroll up buttom
                     state = up_Hold;
-                }else if((~PIND & 0x02) == 0x02){
+                }else if((~PIND & 0x02) == 0x02){//Scroll down button
                     state = down_Hold;
-                }else if((~PIND & 0x04) == 0x04){
+                }else if(((~PIND & 0x04) == 0x04)&&(option1 == 1)){ //1st option
                     state = start_Hold;
+                }else if(((~PIND & 0x04) == 0x04)&&(option2 == 1)){//2nd option
+                    state = LightShow;
                 }else{
                     state = Nokia_Wait;
                 }
@@ -172,16 +175,21 @@ int NokiaTick(int state){
             break;
         case up_Hold:
             state = ((~PIND & 0x01) == 0x01) ? up_Hold:up_Release;
+            option1 = 1;
+            option2 = 0;
             break;
         case up_Release:break;
         case down_Hold:
             state = ((~PIND & 0x02) == 0x02) ? down_Hold:down_Release;
+            option1 = 0;
+            option2 = 1;
             break;
         case down_Release: break;
         case start_Hold: 
             state = ((~PIND & 0x04) == 0x04) ? start_Hold:start_Release;
             break;
         case start_Release: break;
+        case LightShow: break;
         default: break;
     }
 
@@ -215,13 +223,22 @@ int NokiaTick(int state){
         case start_Hold:break;
         case start_Release: 
             menu_on_off =0;
-            clear_Screen();
-            //Initialize x&y
-            Snd_Nokia_Instructions(0x40);
-            Snd_Nokia_Instructions(0x80);
             
             set_ShowScore(level);
             state = Nokia_Wait;
+            break;
+        case LightShow: 
+            //50ms light is on so print the first element in the array and than go to the next element
+            //until all elements in the array are displayed
+            printLED(ArrLightShow[indexLight]);
+            if(tickLight >(sizeof ArrLightShow / sizeof ArrLightShow[0])-1){
+                state = Nokia_Wait; //exit the state
+                indexLight =0;
+                tickLight=0;
+                printLED(0b00000000); //clear LED matrix
+            }
+            indexLight++; //
+            tickLight++;
             break;
         default: break;
     }
@@ -230,13 +247,16 @@ int NokiaTick(int state){
     
 }
 
- int arraySelect[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
- int arrayRecord[3][2]= {{0,0},{0,0},{0,0}};
- int timeTick=0;
- int tempLVL = 0;
- int increment=0;
- int xtemp=0;
- int ytemp=0;
+//I couldve added more levels but keep it relatively short so my demo video does not 
+//exceed the time limit.
+ int arraySelect[4][4]={{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //3 levels
+ int arrayRecord[3][2]= {{0,0},{0,0},{0,0}};//3 input
+ unsigned char pause_btwn_lvls =0; //counter for the pause of the start to each level
+ int timeTick=0; //counter for the amount of time the LED is on
+ int tempLVL = 0; //Temp to hold the current level
+ int increment=0; //
+ int xtemp=0; //x position of the random numbers selected array
+ int ytemp=0; //y position of the random numbers selected array
 enum GameState{gameInit,game_wait, generate_seq,display_seq, check_Responce,check_hold,check_release, nxt_Lvl, lose_game, win_Game};
 
 int GameTick(int state){
@@ -247,7 +267,7 @@ int GameTick(int state){
             state = game_wait;
             break;
         case game_wait:
-            if(menu_on_off == 0){
+            if(menu_on_off == 0){//if menu is off than that means the game started so generate sequence
                 state = generate_seq;
             }else{
                 state = game_wait;
@@ -256,6 +276,7 @@ int GameTick(int state){
         case generate_seq:  break;
         case display_seq: break;
         case check_Responce:
+            printLED(currPosition);
             if((~PIND & 0x04) == 4){
                 state = check_hold;
             }else{
@@ -268,13 +289,16 @@ int GameTick(int state){
             if(tempLVL >0){
                 state = check_Responce;
                 if(arrayRecord[tempLVL-1][0] == ii && arrayRecord[tempLVL-1][1] == jj){
+                    printLED(0b00010000);
                     tempLVL--;
                     state = check_Responce;
         
                 }else{
+                    printLED(0b00100000);
                     state = lose_game;
                 }
                 if(tempLVL ==0){
+                    printLED(0b00010000);
                     level++;
                     state = game_wait;
                     restArray();
@@ -294,49 +318,42 @@ int GameTick(int state){
         case gameInit:break;
         case game_wait:break;
         case generate_seq:
-            for (int q=0; q<level; q++){
-                xtemp = rand() % 5;
-                ytemp = rand() % 5;
-                if(arraySelect[xtemp][ytemp]==1){
+            for (int q=0; q<level; q++){//1st lvl = 1 number, 2nd =2 numbers and so on
+                xtemp = rand() % 5;//generat a random position for x
+                ytemp = rand() % 5;//also for y
+                if(arraySelect[xtemp][ytemp]==1){//if there is a an index [][] that exist search again so no dublicates
                     q--;//Search again
                 }else{
-                    arrayRecord[q][0]=xtemp;
-                    arrayRecord[q][1]=ytemp;
-                    arraySelect[xtemp][ytemp] = 1;
+                    arrayRecord[q][0]=xtemp; //record the random index and store it to display it agin for the player
+                    arrayRecord[q][1]=ytemp; //record the random index and store it to display it agin for the player
+                    arraySelect[xtemp][ytemp] = 1; //Set that index to 1 to show that it is already selected
                 }
             }
             state = display_seq;
             tempLVL = level;
             break;
         case display_seq:
-            if(timeTick > 10){
-                timeTick=0;
-                increment++;
-                tempLVL--;
+            if(pause_btwn_lvls>=20){
+                if(timeTick > 10){
+                    //pause_btwn_lvls=0;
+                    timeTick=0;
+                    increment++;
+                    tempLVL--;
+                }else{
+                    timeTick++;
+                    //Print each random sequence for 1 sec
+                    printLED((arrMatrix[arrayRecord[tempLVL-1][0]][arrayRecord[tempLVL-1][1]]));
+                }
             }else{
-                timeTick++;
-
-                PORTC = 0x00;
-                for(int l = 0; l < 8; l++){
-                    PORTC = 0x08;
-                    PORTC |= ((arrMatrix[arrayRecord[tempLVL-1][0]][arrayRecord[tempLVL-1][1]]>>l) & 0x01);
-                    PORTC |= 0x02;
-                } 
-                PORTC |= 0x04;
-
+                pause_btwn_lvls++;
+                printLED(0b00010000);//green row means to get ready
             }
 
-            if(tempLVL == 0){
-                state = check_Responce;
+            if(tempLVL == 0){ //keep looping unil we output all the numbers that are in the level
+                pause_btwn_lvls =0;
+                state = check_Responce; //wait for the user response to make sure they are right
                 gameOn = 1;
-
-                PORTC = 0x00;
-                for(int l = 0; l < 8; l++){
-                    PORTC = 0x08;
-                    PORTC |= ((0b10000111>>l) & 0x01);
-                    PORTC |= 0x02;
-                } 
-                PORTC |= 0x04;
+                printLED(0b00010000); //flash the green row to show its ready
                 tempLVL = level;
             }
             break;
@@ -352,17 +369,19 @@ int GameTick(int state){
         case win_Game: 
             win_Screen();
             display_menuOnce =1;
-            if((~PIND & 0X08)==0X08){
-                set_startingMenu();
+            if((~PIND & 0X08)==0X08){//Wait for red button to be pressed
+                set_startingMenu(); //reset arrays for next game
                 state = gameInit;
+                menu_on_off =1;
             }
             break;
         case lose_game: 
             lose_Screen();
             display_menuOnce =1;
-            if((~PIND & 0X08)==0X08){
-                set_startingMenu();
+            if((~PIND & 0X08)==0X08){//Wait for red button to be pressed
+                set_startingMenu(); //reset arrays for next game
                 state = gameInit;
+                menu_on_off =1;
             }
             break;
         default:break;
@@ -425,6 +444,21 @@ int main(void){
     }
     return 1;
 }
+
+
+
+//Function for outputing the corrct values to the shift register one bit at a time.
+void printLED(unsigned short valueToLED){
+    PORTC = 0x00;
+    for(int l = 0; l < 8; l++){
+        PORTC = 0x08;
+        PORTC |= ((valueToLED>>l) & 0x01);
+        PORTC |= 0x02;
+    } 
+    PORTC |= 0x04;
+
+}
+
 
 void lose_Screen(){
     clear_Screen();

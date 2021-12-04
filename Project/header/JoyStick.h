@@ -41,7 +41,7 @@ arrMatrix[3][3] = 0b00011110;// 0b01111000; //43
 unsigned char ii = 0;
 unsigned char jj = 0;
 unsigned short output=0;
-unsigned short currPosition = 0b10010110; 
+unsigned short currPosition = 0b10000111; 
 
 
 
