@@ -7,7 +7,7 @@
  *	I acknowledge all content contained herein, excluding template or example
  *	code, is my own original work.
  *
- *  Demo Link: https://www.youtube.com/results?search_query=UCR+EECS+120B
+ *  Demo Link: https://www.youtube.com/watch?v=imeUPkgvfZs&t=2s
  *
  *
  * Or if top dosent work on youtube
