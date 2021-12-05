@@ -37,7 +37,7 @@ void Snd_Nokia_Instructions(char command){
     //Set D/C to Zero to not write to screen and pass instructions.
     PORTB &= ~(1<<DC);
 
-    //When SS is held low than the SPI is activated, and MISO becomes an ouput
+    //When SS is held low than the SPI is activated, and MOSI becomes an ouput
     PORTB &= ~(1<<SS);
 
     //Send data command to the SPDR register and shift each bit
@@ -53,7 +53,7 @@ void Snd_Nokia_Data(char *data, int invert){
     //enable DC to high to enable screen for data write to Y and X
     PORTB |= (1<<DC);
 
-    //When SS is held low than the SPI is activated, and MISO becomes an ouput
+    //When SS is held low than the SPI is activated, and MOSI becomes an ouput
     PORTB &= ~(1<<SS);
 
     //get the length of the char character to display each character in a 
@@ -99,7 +99,7 @@ void init_Screen(){
 }
 
 void clear_Screen(){
-    //When SS is held low than the SPI is activated, and MISO becomes an ouput
+    //When SS is held low than the SPI is activated, and MOSI becomes an ouput
     PORTB &= ~(1<<SS);
     PORTB |= (1<<DC);
 
